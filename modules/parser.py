@@ -1,4 +1,9 @@
-import PyPDF2
+try:
+    import pypdf as _pdf_lib
+    _PYPDF_ATTR = "pypdf"
+except ImportError:
+    import PyPDF2 as _pdf_lib   # type: ignore[no-redef]
+    _PYPDF_ATTR = "PyPDF2"
 import docx
 import re
 from typing import Optional
@@ -30,10 +35,10 @@ class ResumeParser:
     
     @staticmethod
     def _extract_from_pdf(file_path: str) -> str:
-        """Extract text from PDF file"""
+        """Extract text from PDF file using pypdf (with PyPDF2 fallback)."""
         text = ""
         with open(file_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
+            pdf_reader = _pdf_lib.PdfReader(file)
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
         return text
@@ -59,8 +64,9 @@ class ResumeParser:
         # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text)
         
-        # Remove special characters but keep alphanumeric and common punctuation
-        text = re.sub(r'[^\w\s\.\,\-\+\#\/]', '', text)
+        # Remove special characters but keep alphanumeric, common punctuation,
+        # and @ (required for email address detection by ATS scorer)
+        text = re.sub(r'[^\w\s\.\,\-\+\#\/\@]', '', text)
         
         # Normalize line breaks
         text = text.replace('\n', ' ')

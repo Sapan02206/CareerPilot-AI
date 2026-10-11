@@ -1,117 +1,836 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Analyzer - Skill Gap Detection</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Resume Analyzer — Industry Grade</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root {
+      --brand-start: #4f46e5;
+      --brand-end:   #7c3aed;
+      --surface:     #f8fafc;
+      --card-radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--surface);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      padding: 0.9rem 0;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #fff !important;
+      letter-spacing: -0.3px;
+    }
+    .navbar-brand i { margin-right: 6px; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+      color: white;
+      padding: 5rem 0 4rem;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      opacity: 0.88;
+      max-width: 620px;
+      margin: 0 auto 2rem;
+    }
+    .hero-badges .badge {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 0.45rem 0.9rem;
+      border-radius: 2rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin: 0.25rem;
+    }
+
+    /* ── Cards ── */
+    .main-card {
+      border: none;
+      border-radius: var(--card-radius);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+
+    /* ── Tabs ── */
+    .analysis-tabs .nav-link {
+      color: #6b7280;
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .analysis-tabs .nav-link.active {
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+    }
+    .analysis-tabs .nav-link i { margin-right: 6px; }
+
+    /* ── File drop zone ── */
+    .drop-zone {
+      border: 2px dashed #c4b5fd;
+      border-radius: 12px;
+      padding: 2.2rem 1.5rem;
+      text-align: center;
+      background: #faf5ff;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--brand-start);
+      background: #ede9fe;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .drop-zone-icon {
+      font-size: 2.6rem;
+      color: var(--brand-start);
+      margin-bottom: 0.75rem;
+    }
+    .drop-zone-label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 1rem;
+    }
+    .drop-zone-sub {
+      color: #9ca3af;
+      font-size: 0.83rem;
+      margin-top: 0.3rem;
+    }
+    .file-selected-name {
+      margin-top: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--brand-start);
+      font-weight: 600;
+    }
+
+    /* ── Role select ── */
+    .role-select-group { position: relative; }
+    .role-select-group .form-select {
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid #e5e7eb;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .role-select-group .form-select:focus {
+      border-color: var(--brand-start);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    /* ── JD textarea ── */
+    .jd-textarea {
+      border-radius: 10px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .jd-textarea:focus {
+      border-color: var(--brand-start);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    /* ── Submit button ── */
+    .btn-analyze {
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      width: 100%;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-analyze:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(79,70,229,0.35);
+      color: #fff;
+    }
+    .btn-analyze:active { transform: translateY(0); }
+    .btn-analyze:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    /* ── ATS standalone button ── */
+    .btn-ats {
+      border: 2px solid var(--brand-start);
+      border-radius: 10px;
+      padding: 0.65rem 1.5rem;
+      font-weight: 600;
+      color: var(--brand-start);
+      background: transparent;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .btn-ats:hover {
+      background: var(--brand-start);
+      color: #fff;
+    }
+
+    /* ── Feature pills ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .feature-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      text-align: center;
+      border: 1px solid #f3f4f6;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.09);
+    }
+    .feature-item i {
+      font-size: 2rem;
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+    .feature-item h6 {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #111827;
+      margin-bottom: 0.3rem;
+    }
+    .feature-item p {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      background: linear-gradient(135deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+      padding: 2rem 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .loading-box {
+      text-align: center;
+      background: #fff;
+      padding: 2.5rem 3rem;
+      border-radius: var(--card-radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    }
+    .loading-spinner {
+      width: 52px;
+      height: 52px;
+      border: 4px solid #ede9fe;
+      border-top-color: var(--brand-start);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Alert ── */
+    .alert-float {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 10000;
+      min-width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 576px) {
+      .hero { padding: 3rem 0 2.5rem; }
+      .main-card .card-body { padding: 1.5rem; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1">
-                <i class="bi bi-file-earmark-text"></i> AI Resume Analyzer
-            </span>
-            <div>
-                <a href="/career-dashboard" class="btn btn-outline-light btn-sm me-2">
-                    <i class="bi bi-compass"></i> Career Dashboard
-                </a>
-                <a href="/demo" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-database"></i> Try Demo
-                </a>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-lg">
-                    <div class="card-body p-5">
-                        <h2 class="card-title text-center mb-4">
-                            <i class="bi bi-search text-primary"></i> Analyze Your Resume
-                        </h2>
-                        <p class="text-center text-muted mb-4">
-                            Upload your resume and select a target job role to discover your skill gaps and get personalized recommendations.
-                        </p>
-
-                        <form id="analyzeForm" action="/analyze" method="POST" enctype="multipart/form-data">
-                            <!-- File Upload -->
-                            <div class="mb-4">
-                                <label for="resume" class="form-label fw-bold">
-                                    <i class="bi bi-cloud-upload"></i> Upload Resume
-                                </label>
-                                <input type="file" class="form-control" id="resume" name="resume" 
-                                       accept=".pdf,.docx" required>
-                                <div class="form-text">Supported formats: PDF, DOCX (Max 16MB)</div>
-                            </div>
-
-                            <!-- Job Role Selection -->
-                            <div class="mb-4">
-                                <label for="job_role" class="form-label fw-bold">
-                                    <i class="bi bi-briefcase"></i> Target Job Role
-                                </label>
-                                <select class="form-select" id="job_role" name="job_role" required>
-                                    <option value="" selected disabled>Select a job role...</option>
-                                    {% for role in job_roles %}
-                                    <option value="{{ role }}">{{ role }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">
-                                    <i class="bi bi-lightning-charge"></i> Analyze Resume
-                                </button>
-                            </div>
-                        </form>
-
-                        <!-- Loading Spinner -->
-                        <div id="loadingSpinner" class="text-center mt-4" style="display: none;">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2 text-muted">Analyzing your resume...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Features Section -->
-                <div class="row mt-5">
-                    <div class="col-md-4 text-center mb-3">
-                        <div class="feature-icon">
-                            <i class="bi bi-file-text fs-1 text-primary"></i>
-                        </div>
-                        <h5 class="mt-3">Smart Parsing</h5>
-                        <p class="text-muted">Extract skills from PDF and DOCX resumes</p>
-                    </div>
-                    <div class="col-md-4 text-center mb-3">
-                        <div class="feature-icon">
-                            <i class="bi bi-graph-up fs-1 text-success"></i>
-                        </div>
-                        <h5 class="mt-3">Match Scoring</h5>
-                        <p class="text-muted">Calculate your compatibility with job roles</p>
-                    </div>
-                    <div class="col-md-4 text-center mb-3">
-                        <div class="feature-icon">
-                            <i class="bi bi-lightbulb fs-1 text-warning"></i>
-                        </div>
-                        <h5 class="mt-3">Recommendations</h5>
-                        <p class="text-muted">Get actionable learning suggestions</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- ═══════════════════════════════════════════════════════════ Navbar -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-cpu-fill"></i> AI Resume Analyzer
+    </a>
+    <div class="d-flex gap-2">
+      <a href="/career-dashboard" class="btn btn-sm btn-light fw-semibold">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="/demo" class="btn btn-sm btn-outline-light fw-semibold">
+        <i class="bi bi-play-circle"></i> Demo
+      </a>
     </div>
+  </div>
+</nav>
 
-    <footer class="text-center text-muted mt-5 mb-3">
-        <p>&copy; 2026 AI Resume Analyzer. Built with Flask & NLP.</p>
-    </footer>
+<!-- ═══════════════════════════════════════════════════════════ Hero -->
+<section class="hero">
+  <div class="container">
+    <h1><i class="bi bi-stars me-2"></i>Analyze. Match. Get Hired.</h1>
+    <p>Upload your resume and instantly see how you match against any job role or job description — with ATS scoring and a personalised readiness score.</p>
+    <div class="hero-badges">
+      <span class="badge"><i class="bi bi-check-circle me-1"></i>25+ Job Roles</span>
+      <span class="badge"><i class="bi bi-check-circle me-1"></i>ATS Compatibility</span>
+      <span class="badge"><i class="bi bi-check-circle me-1"></i>Custom JD Matching</span>
+      <span class="badge"><i class="bi bi-check-circle me-1"></i>300+ Skills</span>
+    </div>
+  </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<!-- ═══════════════════════════════════════════════════════════ Stats bar -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="row g-3">
+      <div class="col-6 col-md-3 stat-item">
+        <span class="stat-value">25+</span>
+        <span class="stat-label">Job Roles</span>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <span class="stat-value">300+</span>
+        <span class="stat-label">Skills Tracked</span>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <span class="stat-value">6</span>
+        <span class="stat-label">ATS Factors</span>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <span class="stat-value">100%</span>
+        <span class="stat-label">Free to Use</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ Main form -->
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <div class="main-card card">
+          <div class="card-body p-4 p-md-5">
+
+            <!-- Tabs -->
+            <ul class="nav nav-pills analysis-tabs mb-4" id="analysisTabs">
+              <li class="nav-item">
+                <button class="nav-link active" data-tab="role">
+                  <i class="bi bi-briefcase"></i> Match by Role
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" data-tab="jd">
+                  <i class="bi bi-file-text"></i> Match by Job Description
+                </button>
+              </li>
+            </ul>
+
+            <!-- ── Tab: Role-based analysis ── -->
+            <div id="tab-role">
+              <form id="roleForm" action="/analyze" method="POST" enctype="multipart/form-data">
+                <!-- File upload -->
+                <div class="mb-4">
+                  <label class="form-label fw-semibold mb-2">
+                    <i class="bi bi-cloud-upload text-primary me-1"></i> Your Resume
+                  </label>
+                  <div class="drop-zone" id="dropZoneRole">
+                    <input type="file" name="resume" id="resumeFileRole" accept=".pdf,.docx" required />
+                    <div class="drop-zone-icon"><i class="bi bi-file-earmark-arrow-up"></i></div>
+                    <div class="drop-zone-label">Drop your resume here or click to browse</div>
+                    <div class="drop-zone-sub">PDF or DOCX · Max 16 MB</div>
+                    <div class="file-selected-name" id="fileNameRole"></div>
+                  </div>
+                </div>
+
+                <!-- Role select — grouped by category -->
+                <div class="mb-4">
+                  <label class="form-label fw-semibold mb-2">
+                    <i class="bi bi-briefcase text-primary me-1"></i> Target Job Role
+                  </label>
+                  <div class="role-select-group">
+                    <select class="form-select" name="job_role" id="jobRoleSelect" required>
+                      <option value="" disabled selected>Select a job role…</option>
+                      {% for category, roles in roles_by_category.items() %}
+                      <optgroup label="{{ category }}">
+                        {% for role in roles %}
+                        <option value="{{ role }}">{{ role }}</option>
+                        {% endfor %}
+                      </optgroup>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-analyze" id="analyzeRoleBtn">
+                  <i class="bi bi-lightning-charge me-2"></i>Analyze Resume
+                </button>
+              </form>
+            </div>
+
+            <!-- ── Tab: JD-based analysis ── -->
+            <div id="tab-jd" style="display:none;">
+              <form id="jdForm">
+                <!-- File upload -->
+                <div class="mb-4">
+                  <label class="form-label fw-semibold mb-2">
+                    <i class="bi bi-cloud-upload text-primary me-1"></i> Your Resume
+                  </label>
+                  <div class="drop-zone" id="dropZoneJD">
+                    <input type="file" name="resume" id="resumeFileJD" accept=".pdf,.docx" />
+                    <div class="drop-zone-icon"><i class="bi bi-file-earmark-arrow-up"></i></div>
+                    <div class="drop-zone-label">Drop your resume here or click to browse</div>
+                    <div class="drop-zone-sub">PDF or DOCX · Max 16 MB</div>
+                    <div class="file-selected-name" id="fileNameJD"></div>
+                  </div>
+                </div>
+
+                <!-- JD paste -->
+                <div class="mb-4">
+                  <label class="form-label fw-semibold mb-2">
+                    <i class="bi bi-clipboard-text text-primary me-1"></i> Paste Job Description
+                  </label>
+                  <textarea
+                    id="jdTextarea"
+                    class="form-control jd-textarea"
+                    rows="9"
+                    placeholder="Paste the full job description here — requirements, responsibilities, skills, etc.&#10;&#10;The more complete the JD, the more accurate the match…"
+                    required
+                  ></textarea>
+                  <div class="form-text mt-1">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Include the full JD for best results — section headers like "Requirements" and "Preferred" improve skill classification.
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-analyze" id="analyzeJDBtn">
+                  <i class="bi bi-search me-2"></i>Match Against This JD
+                </button>
+              </form>
+
+              <!-- JD results panel (hidden until populated) -->
+              <div id="jdResults" class="mt-4" style="display:none;"></div>
+            </div>
+
+          </div><!-- /card-body -->
+        </div><!-- /card -->
+
+        <!-- ATS standalone check -->
+        <div class="main-card card mt-3">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="flex-shrink-0">
+                <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;">
+                  <i class="bi bi-robot text-white fs-4"></i>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold">ATS Compatibility Check</h6>
+                <p class="text-muted mb-0" style="font-size:0.85rem;">
+                  Check if your resume will pass Applicant Tracking Systems — keyword density, section structure, formatting, and more.
+                </p>
+              </div>
+              <button class="btn btn-ats flex-shrink-0" id="atsCheckBtn" style="width:auto;">
+                <i class="bi bi-shield-check me-1"></i> Check ATS
+              </button>
+            </div>
+            <div id="atsResults" class="mt-3" style="display:none;"></div>
+          </div>
+        </div>
+
+      </div><!-- /col -->
+    </div><!-- /row -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ Features -->
+<section class="py-5 bg-white">
+  <div class="container">
+    <h2 class="text-center fw-bold mb-2" style="font-size:1.7rem;">Everything you need to land the job</h2>
+    <p class="text-center text-muted mb-5">Industry-grade tools, completely free.</p>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <i class="bi bi-cpu text-primary"></i>
+        <h6>Smart Skill Extraction</h6>
+        <p>Detects 300+ skills with fuzzy matching — catches "NodeJS", "node.js", "Node" as the same skill.</p>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-briefcase text-success"></i>
+        <h6>25+ Job Roles</h6>
+        <p>From Frontend Developer to AI Engineer, Blockchain Dev to Network Engineer — grouped by category.</p>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-file-text text-warning"></i>
+        <h6>Custom JD Matching</h6>
+        <p>Paste any job description from any company and get an instant match score with keyword gap analysis.</p>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-robot text-danger"></i>
+        <h6>ATS Score</h6>
+        <p>6-factor analysis: keyword density, section structure, quantification, action verbs, formatting & contact info.</p>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-graph-up text-info"></i>
+        <h6>Progress Tracking</h6>
+        <p>Track your readiness score over time as you learn new skills and add portfolio projects.</p>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-lightbulb text-warning"></i>
+        <h6>Actionable Recs</h6>
+        <p>Not just "learn Python" — specific learning paths, project ideas, and ATS optimisation tips.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ Footer -->
+<footer class="py-4 text-center text-muted" style="font-size:0.83rem;border-top:1px solid #f3f4f6;">
+  <div class="container">
+    <p class="mb-1">
+      <strong>AI Resume Analyzer v3.0</strong> &nbsp;·&nbsp;
+      <a href="/career-dashboard" class="text-decoration-none">Dashboard</a> &nbsp;·&nbsp;
+      <a href="/demo" class="text-decoration-none">Demo</a> &nbsp;·&nbsp;
+      <a href="/history" class="text-decoration-none">History</a>
+    </p>
+    <p class="mb-0">Built with Flask · Bootstrap 5 · Zero external AI APIs required</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════ Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none;">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <h5 class="fw-bold mb-1" id="loadingTitle">Analyzing your resume…</h5>
+    <p class="text-muted mb-0" id="loadingSubtitle">Extracting skills and calculating match scores</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ── Tab switching ── */
+document.querySelectorAll('.analysis-tabs .nav-link').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.analysis-tabs .nav-link').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.getElementById('tab-role').style.display = tab === 'role' ? '' : 'none';
+    document.getElementById('tab-jd').style.display  = tab === 'jd'   ? '' : 'none';
+  });
+});
+
+/* ── Drop zone behaviour ── */
+function initDropZone(zoneId, inputId, nameId) {
+  const zone  = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  const label = document.getElementById(nameId);
+
+  input.addEventListener('change', () => {
+    const f = input.files[0];
+    if (!f) return;
+    if (f.size > 16 * 1024 * 1024) { showAlert('File too large — max 16 MB', 'danger'); input.value = ''; return; }
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (!['pdf','docx'].includes(ext)) { showAlert('Only PDF and DOCX files are supported', 'danger'); input.value = ''; return; }
+    label.textContent = '✓ ' + f.name;
+  });
+
+  ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('dragover'); }));
+  zone.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+}
+
+initDropZone('dropZoneRole', 'resumeFileRole', 'fileNameRole');
+initDropZone('dropZoneJD',   'resumeFileJD',   'fileNameJD');
+
+/* ── Role form submit ── */
+document.getElementById('roleForm').addEventListener('submit', function(e) {
+  const btn = document.getElementById('analyzeRoleBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing…';
+  showLoading('Analyzing your resume…', 'Extracting skills and calculating match scores');
+});
+
+/* ── JD form submit ── */
+document.getElementById('jdForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const jdText = document.getElementById('jdTextarea').value.trim();
+  if (!jdText) { showAlert('Please paste a job description first', 'warning'); return; }
+
+  const fileInput = document.getElementById('resumeFileJD');
+  if (!fileInput.files[0] && !sessionResumeAvailable()) {
+    showAlert('Please upload your resume first', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('analyzeJDBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Matching…';
+
+  const fd = new FormData();
+  fd.append('jd_text', jdText);
+  if (fileInput.files[0]) fd.append('resume', fileInput.files[0]);
+
+  try {
+    const res = await fetch('/api/match-jd', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.error) { showAlert(data.error, 'danger'); return; }
+    renderJDResults(data);
+    document.getElementById('jdResults').style.display = '';
+    document.getElementById('jdResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(err) {
+    showAlert('Request failed — please try again', 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-search me-2"></i>Match Against This JD';
+  }
+});
+
+/* ── ATS check ── */
+document.getElementById('atsCheckBtn').addEventListener('click', async function() {
+  const fileRole = document.getElementById('resumeFileRole').files[0];
+  const fileJD   = document.getElementById('resumeFileJD').files[0];
+  const file = fileRole || fileJD;
+
+  if (!file && !sessionResumeAvailable()) {
+    showAlert('Please upload your resume first using one of the forms above', 'warning');
+    return;
+  }
+
+  this.disabled = true;
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Checking…';
+
+  const fd = new FormData();
+  if (file) fd.append('resume', file);
+
+  try {
+    const res = await fetch('/api/ats-score', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.error) { showAlert(data.error, 'danger'); return; }
+    renderATSResults(data);
+    document.getElementById('atsResults').style.display = '';
+    document.getElementById('atsResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(err) {
+    showAlert('ATS check failed — please try again', 'danger');
+  } finally {
+    this.disabled = false;
+    this.innerHTML = '<i class="bi bi-shield-check me-1"></i> Check ATS';
+  }
+});
+
+/* ── Render JD results ── */
+function renderJDResults(data) {
+  const { jd_match, ats_score } = data;
+  const score = jd_match.match_score;
+  const scoreColor = score >= 80 ? '#10b981' : score >= 60 ? '#3b82f6' : score >= 40 ? '#f59e0b' : '#ef4444';
+  const scoreLabel = score >= 80 ? 'Strong Match' : score >= 60 ? 'Good Match' : score >= 40 ? 'Partial Match' : 'Low Match';
+  const meta = jd_match.metadata;
+
+  let metaHtml = '';
+  if (meta.seniority !== 'not specified') metaHtml += `<span class="badge bg-secondary me-1">${meta.seniority} level</span>`;
+  if (meta.years_experience_required) metaHtml += `<span class="badge bg-secondary me-1">${meta.years_experience_required}+ years exp</span>`;
+  meta.employment_type.filter(t => t !== 'not specified').forEach(t => {
+    metaHtml += `<span class="badge bg-light text-dark border me-1">${t.replace('_',' ')}</span>`;
+  });
+
+  const missingHtml = jd_match.resume_match.missing_required.slice(0,8)
+    .map(s => `<span class="badge me-1 mb-1" style="background:#fee2e2;color:#991b1b;">${s}</span>`).join('');
+  const matchedHtml = jd_match.resume_match.matched_required.slice(0,8)
+    .map(s => `<span class="badge me-1 mb-1" style="background:#d1fae5;color:#065f46;">${s}</span>`).join('');
+
+  const recsHtml = jd_match.recommendations.slice(0,3).map(r => `
+    <div class="d-flex gap-2 mb-2">
+      <span style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">${r.priority}</span>
+      <div>
+        <div class="fw-semibold" style="font-size:0.9rem;">${r.title}</div>
+        <div class="text-muted" style="font-size:0.82rem;">${r.detail}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('jdResults').innerHTML = `
+    <hr/>
+    <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2 text-primary"></i>JD Match Results</h6>
+    <div class="row g-3 mb-3">
+      <div class="col-sm-4 text-center">
+        <div style="width:90px;height:90px;border-radius:50%;background:#fff;border:4px solid ${scoreColor};display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+          <div>
+            <div style="font-size:1.6rem;font-weight:800;color:${scoreColor};line-height:1;">${score}%</div>
+          </div>
+        </div>
+        <div class="mt-2 fw-semibold" style="color:${scoreColor};">${scoreLabel}</div>
+        <div class="mt-1">${metaHtml || '<span class="text-muted" style="font-size:0.8rem;">No metadata detected</span>'}</div>
+      </div>
+      <div class="col-sm-4">
+        <p class="mb-1 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-check-circle text-success me-1"></i>Matched Required (${jd_match.resume_match.matched_required.length})</p>
+        <div>${matchedHtml || '<span class="text-muted" style="font-size:0.82rem;">None matched</span>'}</div>
+      </div>
+      <div class="col-sm-4">
+        <p class="mb-1 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle text-danger me-1"></i>Missing Required (${jd_match.resume_match.missing_required.length})</p>
+        <div>${missingHtml || '<span class="text-muted" style="font-size:0.82rem;">None missing!</span>'}</div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <p class="fw-semibold mb-2" style="font-size:0.9rem;"><i class="bi bi-lightbulb text-warning me-1"></i>Recommendations</p>
+      ${recsHtml}
+    </div>
+    ${(jd_match.scoring_note) ? `
+    <div class="mb-3 p-2 rounded" style="background:#fefce8;border:1px solid #fde68a;">
+      <p class="mb-1 fw-semibold" style="font-size:0.82rem;color:#92400e;">
+        <i class="bi bi-info-circle me-1"></i>Partial Score Notice
+      </p>
+      <p class="mb-0" style="font-size:0.8rem;color:#92400e;">${jd_match.scoring_note}</p>
+    </div>` : ''}
+    ${(jd_match.unrecognised_requirements && jd_match.unrecognised_requirements.length > 0) ? `
+    <div class="mb-3">
+      <p class="mb-1 fw-semibold" style="font-size:0.82rem;color:#6b7280;">
+        <i class="bi bi-question-circle me-1"></i>Requirements not in skill database (${jd_match.unrecognised_requirements.length}):
+      </p>
+      <div>${jd_match.unrecognised_requirements.slice(0,6).map(r =>
+        `<span class="badge me-1 mb-1" style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;">${r}</span>`
+      ).join('')}</div>
+    </div>` : ''}
+    <div class="d-flex gap-2">
+      <a href="/career-dashboard" class="btn btn-sm btn-primary">
+        <i class="bi bi-speedometer2 me-1"></i>View Full Dashboard
+      </a>
+    </div>`;
+}
+
+/* ── Render ATS results ── */
+function renderATSResults(data) {
+  const gradeColors = { A:'#10b981', B:'#3b82f6', C:'#f59e0b', D:'#f97316', F:'#ef4444' };
+  const color = gradeColors[data.grade] || '#6b7280';
+  const bkd = data.breakdown;
+
+  const tipsHtml = data.improvement_tips.filter(t => t.impact !== 'LOW').slice(0,4).map(t => `
+    <div class="d-flex gap-2 mb-2 p-2 rounded" style="background:#fafafa;border:1px solid #f3f4f6;">
+      <span class="badge flex-shrink-0 mt-1" style="background:${t.impact==='CRITICAL'?'#fee2e2':t.impact==='HIGH'?'#fef3c7':'#dbeafe'};color:${t.impact==='CRITICAL'?'#991b1b':t.impact==='HIGH'?'#92400e':'#1e40af'};">${t.impact}</span>
+      <span style="font-size:0.82rem;">${t.tip}</span>
+    </div>`).join('');
+
+  document.getElementById('atsResults').innerHTML = `
+    <hr/>
+    <h6 class="fw-bold mb-3"><i class="bi bi-robot me-2 text-primary"></i>ATS Compatibility Report</h6>
+    <div class="row g-2 mb-3 text-center">
+      <div class="col-4">
+        <div class="p-2 rounded" style="background:#f9fafb;border:1px solid #e5e7eb;">
+          <div style="font-size:2rem;font-weight:800;color:${color};">${data.grade}</div>
+          <div style="font-size:0.75rem;color:#6b7280;">${data.grade_label}</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="p-2 rounded" style="background:#f9fafb;border:1px solid #e5e7eb;">
+          <div style="font-size:2rem;font-weight:800;color:${color};">${data.total_score}%</div>
+          <div style="font-size:0.75rem;color:#6b7280;">ATS Score</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="p-2 rounded" style="background:#f9fafb;border:1px solid #e5e7eb;">
+          <div style="font-size:2rem;font-weight:800;color:#374151;">${data.word_count}</div>
+          <div style="font-size:0.75rem;color:#6b7280;">Words</div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-2 mb-3">
+      ${Object.entries(bkd).map(([key, val]) => `
+        <div class="col-6 col-md-4">
+          <div class="p-2 rounded" style="background:#f9fafb;border:1px solid #e5e7eb;">
+            <div class="d-flex justify-content-between mb-1">
+              <span style="font-size:0.78rem;font-weight:600;">${key.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
+              <span style="font-size:0.78rem;font-weight:700;color:${val.score>=70?'#10b981':val.score>=50?'#f59e0b':'#ef4444'};">${val.score}%</span>
+            </div>
+            <div style="height:4px;background:#e5e7eb;border-radius:2px;">
+              <div style="height:4px;background:${val.score>=70?'#10b981':val.score>=50?'#f59e0b':'#ef4444'};border-radius:2px;width:${val.score}%;transition:width 0.5s;"></div>
+            </div>
+            <div style="font-size:0.72rem;color:#9ca3af;margin-top:2px;">weight ${val.weight}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${tipsHtml ? `<p class="fw-semibold mb-2" style="font-size:0.9rem;"><i class="bi bi-tools me-1 text-warning"></i>Top Improvements</p>${tipsHtml}` : ''}`;
+}
+
+/* ── Helpers ── */
+function sessionResumeAvailable() {
+  // We can't know server-side session from JS, but if dashboard was visited this session it may be set
+  return false;
+}
+
+function showLoading(title, subtitle) {
+  document.getElementById('loadingTitle').textContent   = title;
+  document.getElementById('loadingSubtitle').textContent = subtitle;
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function showAlert(msg, type = 'info') {
+  const div = document.createElement('div');
+  div.className = `alert alert-${type} alert-dismissible alert-float`;
+  div.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 5000);
+}
+</script>
 </body>
 </html>

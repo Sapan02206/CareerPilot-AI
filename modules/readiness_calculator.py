@@ -294,7 +294,7 @@ class ReadinessCalculator:
                     'priority': 1,
                     'type': 'skill_gap',
                     'title': f"Learn {skill_data['skill']}",
-                    'description': f"{skill_data['skill']} is a required skill for this role. Focus on this first.",
+                    'detail': f"{skill_data['skill']} is a required skill for this role. Focus on this first.",
                     'estimated_time': '2-3 months',
                     'action': f"Complete a {skill_data['skill']} course and build a project"
                 })
@@ -305,7 +305,7 @@ class ReadinessCalculator:
                 'priority': 2,
                 'type': 'evidence',
                 'title': 'Add Projects to Your Portfolio',
-                'description': f"Your evidence score is {evidence_score}/100. Add projects demonstrating your skills.",
+                'detail': f"Your evidence score is {evidence_score}/100. Add projects demonstrating your skills.",
                 'estimated_time': '1-2 weeks per project',
                 'action': 'Build 2-3 projects using the required skills'
             })
@@ -317,7 +317,7 @@ class ReadinessCalculator:
                     'priority': 3,
                     'type': 'skill_enhancement',
                     'title': f"Learn {skill_data['skill']} (Optional)",
-                    'description': f"{skill_data['skill']} is an optional skill that will boost your competitiveness.",
+                    'detail': f"{skill_data['skill']} is an optional skill that will boost your competitiveness.",
                     'estimated_time': '1-2 months',
                     'action': f"Learn {skill_data['skill']} basics and add to a project"
                 })

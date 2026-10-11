@@ -1,86 +1,202 @@
 {
   "Frontend Developer": {
-    "description": "Builds user interfaces and client-side applications",
-    "required_skills": [
-      "HTML", "CSS", "JavaScript", "React", "Git"
-    ],
-    "optional_skills": [
-      "TypeScript", "Vue.js", "Angular", "Tailwind CSS", "Bootstrap",
-      "Webpack", "Redux", "Next.js", "Testing", "Responsive Design"
-    ],
-    "experience_level": "Entry to Mid-level"
+    "description": "Builds user interfaces and client-side web applications",
+    "required_skills": ["HTML", "CSS", "JavaScript", "React", "Git", "Responsive Design"],
+    "optional_skills": ["TypeScript", "Vue.js", "Angular", "Tailwind CSS", "Bootstrap", "Webpack", "Redux", "Next.js", "Jest", "Figma", "GraphQL", "Accessibility"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$75,000 - $120,000",
+    "category": "Web Development"
   },
   "Backend Developer": {
-    "description": "Develops server-side logic and database management",
-    "required_skills": [
-      "Python", "Node.js", "SQL", "REST API", "Git"
-    ],
-    "optional_skills": [
-      "Django", "Flask", "Express.js", "MongoDB", "PostgreSQL",
-      "Docker", "Redis", "GraphQL", "Microservices", "AWS"
-    ],
-    "experience_level": "Entry to Mid-level"
+    "description": "Develops server-side logic, APIs, and database management",
+    "required_skills": ["Python", "SQL", "REST API", "Git", "Linux", "Node.js"],
+    "optional_skills": ["Django", "Flask", "FastAPI", "Express.js", "MongoDB", "PostgreSQL", "Docker", "Redis", "GraphQL", "Microservices", "AWS", "Message Queues"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$80,000 - $130,000",
+    "category": "Web Development"
   },
   "Full Stack Developer": {
-    "description": "Works on both frontend and backend development",
-    "required_skills": [
-      "HTML", "CSS", "JavaScript", "React", "Node.js",
-      "SQL", "REST API", "Git"
-    ],
-    "optional_skills": [
-      "TypeScript", "MongoDB", "PostgreSQL", "Docker", "AWS",
-      "Redux", "Express.js", "Testing", "CI/CD", "Agile"
-    ],
-    "experience_level": "Mid to Senior-level"
+    "description": "Works on both frontend and backend development end-to-end",
+    "required_skills": ["HTML", "CSS", "JavaScript", "React", "Node.js", "SQL", "REST API", "Git"],
+    "optional_skills": ["TypeScript", "MongoDB", "PostgreSQL", "Docker", "AWS", "Redux", "Express.js", "Jest", "CI/CD", "Agile", "GraphQL"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$90,000 - $145,000",
+    "category": "Web Development"
   },
   "Data Scientist": {
-    "description": "Analyzes data and builds predictive models",
-    "required_skills": [
-      "Python", "Machine Learning", "Pandas", "NumPy",
-      "Data Analysis", "SQL"
-    ],
-    "optional_skills": [
-      "TensorFlow", "PyTorch", "Scikit-learn", "Deep Learning",
-      "NLP", "Computer Vision", "R", "Tableau", "Power BI",
-      "Statistical Modeling", "Big Data", "Spark"
-    ],
-    "experience_level": "Mid to Senior-level"
+    "description": "Analyzes complex data and builds predictive models to drive decisions",
+    "required_skills": ["Python", "Machine Learning", "Pandas", "NumPy", "SQL", "Statistics", "Data Analysis"],
+    "optional_skills": ["TensorFlow", "PyTorch", "Scikit-learn", "Deep Learning", "NLP", "Computer Vision", "R", "Tableau", "Power BI", "Statistical Modeling", "Big Data", "Spark", "Jupyter", "Feature Engineering"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$95,000 - $155,000",
+    "category": "Data & AI"
   },
   "DevOps Engineer": {
-    "description": "Manages infrastructure and deployment pipelines",
-    "required_skills": [
-      "Linux", "Docker", "Kubernetes", "CI/CD", "Git"
-    ],
-    "optional_skills": [
-      "AWS", "Azure", "Terraform", "Ansible", "Jenkins",
-      "Python", "Bash", "Monitoring", "Prometheus", "Grafana",
-      "Networking", "Security"
-    ],
-    "experience_level": "Mid to Senior-level"
+    "description": "Manages infrastructure, CI/CD pipelines and site reliability",
+    "required_skills": ["Linux", "Docker", "Kubernetes", "CI/CD", "Git", "Shell Scripting", "Cloud"],
+    "optional_skills": ["AWS", "Azure", "Terraform", "Ansible", "Jenkins", "Python", "Bash", "Prometheus", "Grafana", "Networking", "Security", "GitHub Actions", "GitLab CI", "Helm"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$100,000 - $155,000",
+    "category": "Infrastructure"
   },
   "Mobile Developer": {
-    "description": "Creates mobile applications for iOS and Android",
-    "required_skills": [
-      "React Native", "JavaScript", "Mobile UI/UX", "Git"
-    ],
-    "optional_skills": [
-      "Flutter", "iOS Development", "Android Development", "Swift",
-      "Kotlin", "TypeScript", "Redux", "Firebase", "REST API",
-      "App Store Deployment"
-    ],
-    "experience_level": "Entry to Mid-level"
+    "description": "Creates native and cross-platform mobile applications",
+    "required_skills": ["React Native", "JavaScript", "Git", "Mobile UI/UX", "REST API"],
+    "optional_skills": ["Flutter", "iOS Development", "Android Development", "Swift", "Kotlin", "TypeScript", "Redux", "Firebase", "App Store Deployment", "Push Notifications", "SQLite"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$80,000 - $130,000",
+    "category": "Mobile"
   },
   "Machine Learning Engineer": {
-    "description": "Develops and deploys ML models in production",
-    "required_skills": [
-      "Python", "Machine Learning", "TensorFlow", "PyTorch",
-      "Deep Learning", "Git"
-    ],
-    "optional_skills": [
-      "MLOps", "Docker", "Kubernetes", "AWS", "Model Deployment",
-      "NLP", "Computer Vision", "Scikit-learn", "Data Engineering",
-      "Spark", "Feature Engineering"
-    ],
-    "experience_level": "Mid to Senior-level"
+    "description": "Develops, trains and deploys ML models in production systems",
+    "required_skills": ["Python", "Machine Learning", "TensorFlow", "PyTorch", "Deep Learning", "Git", "SQL"],
+    "optional_skills": ["MLOps", "Docker", "Kubernetes", "AWS", "Model Deployment", "NLP", "Computer Vision", "Scikit-learn", "Data Engineering", "Spark", "Feature Engineering", "ONNX", "Kubeflow"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$110,000 - $175,000",
+    "category": "Data & AI"
+  },
+  "Data Engineer": {
+    "description": "Builds and maintains data pipelines, warehouses and infrastructure",
+    "required_skills": ["Python", "SQL", "ETL", "Data Pipelines", "Spark", "Git"],
+    "optional_skills": ["Airflow", "Kafka", "AWS", "Azure", "dbt", "Snowflake", "BigQuery", "Hadoop", "Redshift", "PostgreSQL", "MongoDB", "Docker", "Scala"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$95,000 - $150,000",
+    "category": "Data & AI"
+  },
+  "Cloud Architect": {
+    "description": "Designs and oversees cloud computing strategies and infrastructure",
+    "required_skills": ["AWS", "Azure", "Cloud", "Networking", "Security", "Docker", "Kubernetes"],
+    "optional_skills": ["Terraform", "Ansible", "Python", "Linux", "Microservices", "Serverless", "CI/CD", "Cost Optimization", "Multi-cloud", "IAM", "VPC", "Load Balancing"],
+    "experience_level": "Senior-level",
+    "avg_salary": "$130,000 - $200,000",
+    "category": "Infrastructure"
+  },
+  "Site Reliability Engineer": {
+    "description": "Ensures reliability, availability and performance of large-scale systems",
+    "required_skills": ["Linux", "Python", "Monitoring", "Kubernetes", "Docker", "Incident Management", "Git"],
+    "optional_skills": ["Prometheus", "Grafana", "AWS", "Terraform", "Go", "Chaos Engineering", "SLO/SLA", "On-call", "Distributed Systems", "Networking", "Jenkins", "Shell Scripting"],
+    "experience_level": "Senior-level",
+    "avg_salary": "$120,000 - $180,000",
+    "category": "Infrastructure"
+  },
+  "iOS Developer": {
+    "description": "Builds native iOS applications for iPhone and iPad",
+    "required_skills": ["Swift", "iOS Development", "Xcode", "UIKit", "Git", "REST API"],
+    "optional_skills": ["SwiftUI", "Objective-C", "Core Data", "Push Notifications", "App Store Deployment", "CocoaPods", "RxSwift", "MVVM", "ARKit", "CoreML", "In-App Purchase"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$90,000 - $150,000",
+    "category": "Mobile"
+  },
+  "Android Developer": {
+    "description": "Builds native Android applications for phones and tablets",
+    "required_skills": ["Kotlin", "Android Development", "Android Studio", "Java", "Git", "REST API"],
+    "optional_skills": ["Jetpack Compose", "Room Database", "Retrofit", "Firebase", "MVVM", "Coroutines", "Gradle", "Google Play Deployment", "In-App Purchase", "WorkManager", "RxJava"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$85,000 - $145,000",
+    "category": "Mobile"
+  },
+  "UI/UX Designer": {
+    "description": "Designs intuitive user interfaces and experiences for digital products",
+    "required_skills": ["Figma", "User Research", "Wireframing", "Prototyping", "Visual Design", "HTML", "CSS"],
+    "optional_skills": ["Adobe XD", "Sketch", "Illustrator", "Photoshop", "InVision", "Design Systems", "Accessibility", "A/B Testing", "Usability Testing", "Motion Design", "Zeplin"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$70,000 - $120,000",
+    "category": "Design"
+  },
+  "QA Engineer": {
+    "description": "Ensures software quality through testing strategies and automation",
+    "required_skills": ["Manual Testing", "Automated Testing", "Selenium", "Git", "Bug Tracking", "Test Planning"],
+    "optional_skills": ["Python", "Java", "Jest", "Cypress", "Appium", "Postman", "JMeter", "JIRA", "CI/CD", "API Testing", "Performance Testing", "Security Testing"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$65,000 - $110,000",
+    "category": "Quality Assurance"
+  },
+  "Security Engineer": {
+    "description": "Protects systems and data from vulnerabilities and cyber threats",
+    "required_skills": ["Network Security", "Python", "Penetration Testing", "Linux", "Cryptography", "Security Auditing"],
+    "optional_skills": ["OWASP", "Burp Suite", "AWS Security", "SIEM", "Firewall", "Incident Response", "Ethical Hacking", "Compliance", "Zero Trust", "SOC", "CISSP", "CEH"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$100,000 - $165,000",
+    "category": "Security"
+  },
+  "Database Administrator": {
+    "description": "Manages, optimizes and secures database systems",
+    "required_skills": ["SQL", "PostgreSQL", "MySQL", "Database Design", "Performance Tuning", "Backup & Recovery"],
+    "optional_skills": ["Oracle", "SQL Server", "MongoDB", "Redis", "Query Optimization", "Replication", "Partitioning", "AWS RDS", "NoSQL", "Data Modeling", "ETL", "Monitoring"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$85,000 - $130,000",
+    "category": "Data & AI"
+  },
+  "Product Manager": {
+    "description": "Drives product strategy, roadmap and cross-functional execution",
+    "required_skills": ["Product Strategy", "Roadmapping", "Agile", "Data Analysis", "Stakeholder Management", "User Research"],
+    "optional_skills": ["JIRA", "Confluence", "SQL", "A/B Testing", "Go-to-Market", "OKRs", "Figma", "Customer Discovery", "Competitive Analysis", "Prioritization Frameworks", "Sprint Planning"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$100,000 - $165,000",
+    "category": "Product"
+  },
+  "Blockchain Developer": {
+    "description": "Develops decentralized applications and smart contracts",
+    "required_skills": ["Solidity", "Ethereum", "Smart Contracts", "JavaScript", "Git", "Web3.js"],
+    "optional_skills": ["Hardhat", "Truffle", "React", "DeFi", "NFT", "IPFS", "Layer 2", "Rust", "Polkadot", "Chainlink", "OpenZeppelin", "Cryptography"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$100,000 - $175,000",
+    "category": "Blockchain"
+  },
+  "Game Developer": {
+    "description": "Creates interactive video games for various platforms",
+    "required_skills": ["Unity", "C#", "Game Design", "Git", "3D Mathematics", "Physics Simulation"],
+    "optional_skills": ["Unreal Engine", "C++", "Blender", "2D Graphics", "Multiplayer", "Shader Programming", "AI for Games", "Mobile Games", "VR/AR", "Level Design", "Debugging"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$70,000 - $130,000",
+    "category": "Game Development"
+  },
+  "Embedded Systems Engineer": {
+    "description": "Develops software for hardware devices and embedded systems",
+    "required_skills": ["C", "C++", "Embedded Linux", "RTOS", "Git", "Microcontrollers"],
+    "optional_skills": ["Python", "FPGA", "Assembly", "ARM", "CAN Bus", "I2C", "SPI", "UART", "Debugging Tools", "PCB Design", "IoT", "Bluetooth", "WiFi Protocols"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$90,000 - $145,000",
+    "category": "Systems"
+  },
+  "AI Engineer": {
+    "description": "Builds and integrates AI/LLM-powered applications and systems",
+    "required_skills": ["Python", "LLMs", "Prompt Engineering", "REST API", "Git", "Machine Learning"],
+    "optional_skills": ["LangChain", "OpenAI API", "Hugging Face", "Vector Databases", "RAG", "Fine-tuning", "Docker", "AWS", "FastAPI", "NLP", "Embeddings", "Agent Frameworks"],
+    "experience_level": "Mid to Senior-level",
+    "avg_salary": "$120,000 - $200,000",
+    "category": "Data & AI"
+  },
+  "Systems Engineer": {
+    "description": "Designs and integrates complex hardware-software systems",
+    "required_skills": ["C++", "Linux", "Networking", "System Design", "Git", "Shell Scripting"],
+    "optional_skills": ["Python", "Assembly", "RTOS", "Protocol Design", "Distributed Systems", "Performance Profiling", "Virtualization", "TCP/IP", "Debugging", "Multithreading"],
+    "experience_level": "Senior-level",
+    "avg_salary": "$100,000 - $160,000",
+    "category": "Systems"
+  },
+  "Technical Writer": {
+    "description": "Creates technical documentation, guides and API references",
+    "required_skills": ["Technical Writing", "Markdown", "Documentation", "API Documentation", "Git", "Research"],
+    "optional_skills": ["HTML", "CSS", "Confluence", "ReadTheDocs", "Swagger", "Postman", "Python", "DITA", "Content Strategy", "SEO", "Diagrams"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$60,000 - $110,000",
+    "category": "Product"
+  },
+  "Scrum Master": {
+    "description": "Facilitates agile processes and removes team impediments",
+    "required_skills": ["Scrum", "Agile", "Sprint Planning", "JIRA", "Facilitation", "Stakeholder Management"],
+    "optional_skills": ["Kanban", "Confluence", "SAFe", "Coaching", "Retrospectives", "Risk Management", "Team Building", "OKRs", "Metrics", "Continuous Improvement"],
+    "experience_level": "Mid-level",
+    "avg_salary": "$80,000 - $130,000",
+    "category": "Product"
+  },
+  "Network Engineer": {
+    "description": "Designs, implements and maintains computer networks",
+    "required_skills": ["Networking", "TCP/IP", "Cisco", "Routing", "Switching", "Firewalls", "Linux"],
+    "optional_skills": ["BGP", "OSPF", "VPN", "SDN", "AWS Networking", "Wireshark", "VLAN", "Load Balancing", "Network Security", "Python", "Automation", "CCNA"],
+    "experience_level": "Entry to Mid-level",
+    "avg_salary": "$75,000 - $125,000",
+    "category": "Infrastructure"
   }
 }

@@ -1,114 +1,151 @@
-# PythonAnywhere Deployment Fix Guide
+# PythonAnywhere Deployment Guide — v3.0
 
-## Problem
-PythonAnywhere is showing README.md instead of running the Flask application.
+## One-time setup (or after major upgrade)
 
-## Root Cause
-Static file mapping is configured incorrectly, causing PythonAnywhere to serve files instead of running the Flask app.
+### Step 1 — Push latest code
 
----
-
-## Solution Steps
-
-### Step 1: Remove Incorrect Static File Mappings
-
-1. Go to PythonAnywhere Dashboard
-2. Click **"Web"** tab
-3. Scroll to **"Static files"** section
-4. **DELETE** any mapping that has:
-   - URL: `/` or empty
-   - Directory pointing to project root
-
-### Step 2: Configure Correct Static Files
-
-Keep ONLY this mapping:
-
-| URL | Directory |
-|-----|-----------|
-| `/static/` | `/home/sapandesai/Resume_Analyzer/static` |
-
-### Step 3: Verify WSGI Configuration
-
-1. In Web tab, under **"Code"** section
-2. Click on **WSGI configuration file** link
-3. Replace ALL content with:
-
-```python
-import sys
-import os
-
-# Add Python packages path
-sys.path.insert(0, '/home/sapandesai/.local/lib/python3.13/site-packages')
-sys.path.insert(0, '/home/sapandesai/Resume_Analyzer')
-
-# Import Flask application
-from app import app as application
+From your local machine:
+```bash
+git add -A
+git commit -m "v3.0 industry upgrade"
+git push origin main
 ```
 
+Then on PythonAnywhere **Bash console**:
+```bash
+cd ~/Resume_Analyzer
+git pull origin main
+```
+
+---
+
+### Step 2 — Install / update dependencies
+
+```bash
+pip3 install --user -r requirements.txt
+```
+
+If you see PyPDF2 or python-docx errors, install manually:
+```bash
+pip3 install --user PyPDF2==3.0.1 python-docx==1.1.0
+```
+
+---
+
+### Step 3 — Initialise the database
+
+```bash
+cd ~/Resume_Analyzer
+python3 -c "from app import app, db; app.app_context().__enter__(); db.create_all(); print('DB OK')"
+```
+
+---
+
+### Step 4 — Fix WSGI configuration
+
+1. Go to **Web** tab in PythonAnywhere dashboard
+2. Click on the **WSGI configuration file** link under "Code"
+3. **Delete all content** and paste the contents of `wsgi_config_pythonanywhere.py`
 4. Click **Save**
 
-### Step 4: Verify Paths
+---
 
-In Web tab, under **"Code"** section:
+### Step 5 — Fix Static Files mapping
 
-- **Source code**: `/home/sapandesai/Resume_Analyzer`
-- **Working directory**: `/home/sapandesai/Resume_Analyzer`
-- **WSGI configuration file**: (should be auto-filled)
+In the **Web** tab, scroll to **Static files**. Remove ALL entries, then add exactly ONE:
 
-### Step 5: Reload Application
+| URL      | Directory                                    |
+|----------|----------------------------------------------|
+| /static/ | /home/sapandesai/Resume_Analyzer/static      |
 
-1. Scroll to top of Web tab
-2. Click big green **"Reload sapandesai.pythonanywhere.com"** button
-3. Wait 10 seconds
-4. Visit: http://sapandesai.pythonanywhere.com
+⚠️ Do NOT add a mapping for `/` pointing to the project root — this causes PythonAnywhere to serve files instead of running Flask.
 
 ---
 
-## Verification Checklist
+### Step 6 — Set Working Directory & Source Code
 
-✅ Static files section has ONLY `/static/` mapping
-✅ WSGI file imports `from app import app as application`
-✅ Working directory is set correctly
-✅ Reload button clicked
-✅ Wait 10 seconds before testing
+Under "Code" section in Web tab:
 
----
-
-## If Still Not Working
-
-### Check Error Log
-
-1. In Web tab, scroll to **"Log files"**
-2. Click **"Error log"**
-3. Look at the last 10-20 lines
-4. Share the error message
-
-### Common Issues
-
-| Error | Solution |
-|-------|----------|
-| `ModuleNotFoundError: No module named 'PyPDF2'` | Run: `pip3 install --user PyPDF2` |
-| `ModuleNotFoundError: No module named 'app'` | Check WSGI file path is correct |
-| Still showing README | Clear browser cache (Ctrl+Shift+R) |
+| Field              | Value                                  |
+|--------------------|----------------------------------------|
+| Source code        | /home/sapandesai/Resume_Analyzer       |
+| Working directory  | /home/sapandesai/Resume_Analyzer       |
 
 ---
 
-## Emergency Reset
+### Step 7 — Reload
+
+Click the big green **Reload sapandesai.pythonanywhere.com** button.
+
+Wait 10 seconds, then visit: **http://sapandesai.pythonanywhere.com**
+
+---
+
+## Troubleshooting
+
+### Check error log first
+
+Web tab → Log files → **Error log** → read the last 20 lines.
+
+### Common errors and fixes
+
+| Error | Fix |
+|-------|-----|
+| `ModuleNotFoundError: No module named 'flask'` | `pip3 install --user Flask==3.0.0` |
+| `ModuleNotFoundError: No module named 'PyPDF2'` | `pip3 install --user PyPDF2==3.0.1` |
+| `ModuleNotFoundError: No module named 'app'` | Check WSGI file path and `sys.path` entries |
+| Still showing README.md | Wrong static file mapping — redo Step 5 |
+| `No module named 'modules.jd_matcher'` | `git pull` didn't include new files |
+| Database errors | Redo Step 3 |
+| 500 on `/dashboard` | Check error log; usually a missing DB table — redo Step 3 |
+
+### Verify all new modules are present
+
+```bash
+ls ~/Resume_Analyzer/modules/
+# Should include: jd_matcher.py, ats_scorer.py, matcher.py, ...
+
+ls ~/Resume_Analyzer/data/
+# Should include: job_roles.json (25 roles), skills.json (300+ skills)
+```
+
+### Test the app from Bash console
+
+```bash
+cd ~/Resume_Analyzer
+python3 -c "
+from modules.matcher import SkillMatcher
+m = SkillMatcher('data/job_roles.json')
+print('Roles:', len(m.get_available_roles()))
+from modules.jd_matcher import JDMatcher
+jd = JDMatcher('data/skills.json')
+print('Skills:', len(jd.all_skills))
+from modules.ats_scorer import ATSScorer
+print('ATS: OK')
+print('All modules loaded successfully')
+"
+```
+
+---
+
+## New API endpoints in v3.0
+
+After deployment, these new endpoints are live:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/match-jd` | POST | Match resume against custom JD text |
+| `/api/ats-score` | POST | ATS compatibility score |
+| `/api/top-roles` | POST | Top 5 role matches for a resume |
+| `/api/roles?grouped=true` | GET | Roles grouped by category |
+
+Test from browser: `http://sapandesai.pythonanywhere.com/api/roles?grouped=true`
+
+---
+
+## Emergency reset
 
 If nothing works:
-
 1. Delete the web app in PythonAnywhere
-2. Create new web app:
-   - Choose Flask
-   - Choose Python 3.10
-   - Path: `/home/sapandesai/Resume_Analyzer/app.py`
-3. Follow Steps 1-5 above
-
----
-
-## Contact Support
-
-If issue persists after following all steps:
-1. Take screenshot of Web tab configuration
-2. Copy last 20 lines from error log
-3. Share both for troubleshooting
+2. Create new: Flask → Python 3.12 → path `/home/sapandesai/Resume_Analyzer/app.py`
+3. Redo Steps 4–7 above

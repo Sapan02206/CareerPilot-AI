@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -23,9 +24,22 @@ wheels/
 .installed.cfg
 *.egg
 
+# Pytest
+.pytest_cache/
+
 # Flask
 instance/
 .webassets-cache
+
+# SQLite database
+*.db
+*.sqlite3
+
+# ML model binaries (large files — regenerate with train_all_models.py)
+ml_models/saved/*.pkl
+
+# Processed data
+data/processed/
 
 # Environment variables
 .env
