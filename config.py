@@ -31,9 +31,13 @@ class Config:
     # SQLite uses instance/ subdirectory for data persistence
     _db_url = os.environ.get('DATABASE_URL', '')
 
-    # Fix for older Heroku/Railway postgres:// URL scheme
+    # Normalize PostgreSQL URLs to explicitly use psycopg2 driver
+    # Handles both postgres:// (Heroku/Railway) and postgresql:// while preserving
+    # URLs that already specify a driver (e.g., postgresql+psycopg2://)
     if _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        _db_url = _db_url.replace('postgres://', 'postgresql+psycopg2://', 1)
+    elif _db_url.startswith('postgresql://'):
+        _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
     # SQLite path: use absolute path to instance/resume_analyzer.db
     # This ensures consistent behavior across platforms (local dev, PythonAnywhere, etc.)
