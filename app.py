@@ -254,6 +254,20 @@ def analyze():
                             match_results.get('missing_required', [])
         ats_result = ats_scorer.score(cleaned_text, required_keywords, job_role)
 
+        # Persist resume record for history and aggregate statistics
+        resume_record = Resume(
+            filename=filename,
+            job_role=job_role,
+            match_score=match_results.get('match_score', 0.0),
+            extracted_skills=basic_skills,
+            matched_skills=(match_results.get('matched_required', []) +
+                            match_results.get('matched_optional', [])),
+            missing_skills=(match_results.get('missing_required', []) +
+                            match_results.get('missing_optional', [])),
+            recommendations=readiness_data.get('recommendations', [])
+        )
+        db.session.add(resume_record)
+
         # Persist snapshot with full breakdown & ATS score into database
         _save_snapshot(user_session.session_id, job_role, readiness_data,
                        enriched_skills, match_results, ats_score=ats_result)
@@ -263,6 +277,7 @@ def analyze():
         return redirect(url_for('career_dashboard'))
 
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
 
