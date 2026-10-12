@@ -537,7 +537,9 @@ function renderProgressChart(data) {
   canvas.style.display = '';
   const labels = timeline.map(t => {
     const d = new Date(t.date);
-    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    const datePart = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    const timePart = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    return `${datePart} ${timePart}`;
   });
 
   progressChartInstance = new Chart(canvas.getContext('2d'), {
@@ -634,7 +636,9 @@ function renderProgressTimeline(data) {
   // Show last 5 snapshots
   el.innerHTML = timeline.slice(-5).reverse().map(t => {
     const d = new Date(t.date);
-    const label = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
+    const datePart = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
+    const timePart = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const label = `${datePart} ${timePart}`;
     const color = scoreColor(t.overall_score);
     return `
       <div class="timeline-row">

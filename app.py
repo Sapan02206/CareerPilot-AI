@@ -543,16 +543,33 @@ def delete_project(project_id):
 
 @app.route('/api/progress', methods=['GET'])
 def get_progress():
-    """Return historical readiness score timeline."""
+    """Return historical readiness score timeline isolated by target role."""
     try:
         user_session = get_or_create_session()
+        target_role = (request.args.get('target_role', '').strip() or
+                       session.get('target_role') or
+                       user_session.target_role)
+
+        if not target_role:
+            return jsonify({
+                'timeline': [],
+                'total_snapshots': 0,
+                'improvement': 0,
+                'target_role': 'Not set'
+            })
+
         snapshots = ReadinessSnapshot.query.filter_by(
-            session_id=user_session.session_id
+            session_id=user_session.session_id,
+            target_role=target_role
         ).order_by(ReadinessSnapshot.created_at.asc()).all()
 
         if not snapshots:
-            return jsonify({'timeline': [], 'total_snapshots': 0,
-                            'improvement': 0, 'target_role': user_session.target_role})
+            return jsonify({
+                'timeline': [],
+                'total_snapshots': 0,
+                'improvement': 0,
+                'target_role': target_role
+            })
 
         timeline = [{
             'date': s.created_at.isoformat(),
@@ -560,6 +577,7 @@ def get_progress():
             'skill_match_score': s.skill_match_score,
             'experience_score': s.experience_score,
             'evidence_score': s.evidence_score,
+            'target_role': s.target_role,
         } for s in snapshots]
 
         improvement = snapshots[-1].overall_score - snapshots[0].overall_score
@@ -567,7 +585,7 @@ def get_progress():
             'timeline': timeline,
             'total_snapshots': len(snapshots),
             'improvement': round(improvement, 2),
-            'target_role': user_session.target_role or 'Not set',
+            'target_role': target_role,
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
