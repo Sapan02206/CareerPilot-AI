@@ -7,10 +7,19 @@ Flask application with:
 """
 
 import os
+import sys
 import uuid
+import threading
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from werkzeug.utils import secure_filename
+
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 
 from config import Config
 from models import db, Resume, UserSession, ReadinessSnapshot, UserProject
@@ -31,16 +40,25 @@ app.config.from_object(Config)
 app.secret_key = app.config['SECRET_KEY']
 
 db.init_app(app)
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Create upload folder — handles serverless read-only filesystems
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except OSError as e:
+    # On serverless platforms (Vercel), only /tmp is writable
+    # Config already handles /tmp detection, so this catches edge cases
+    print(f"⚠️  Warning: Could not create upload folder: {e}")
+    # App will continue — individual upload operations will handle errors
 
 # ---------------------------------------------------------------------------
-# Database initialisation — gunicorn-safe
+# Database initialisation — gunicorn-safe + serverless-safe
 # ---------------------------------------------------------------------------
 # db.create_all() runs ONCE at import time inside an app context.
 # This works correctly whether the app is started with:
 #   - `python app.py`          (direct run)
 #   - `gunicorn app:app`       (production WSGI server)
 #   - `flask run`              (Flask dev server)
+#   - `vercel dev / vercel`    (Vercel serverless)
 #
 # For production with schema migrations, replace this block with
 # Flask-Migrate (flask db upgrade) and remove create_all() entirely.
@@ -48,9 +66,20 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 #
 # SQLAlchemy's create_all() is idempotent — it only creates tables that
 # do not already exist, so calling it on startup is safe and cheap.
-with app.app_context():
-    db.create_all()
-
+#
+# On Vercel, DATABASE_URL MUST be configured to Vercel Postgres.
+# Without DATABASE_URL, this will fail with SQLite on read-only filesystem.
+try:
+    with app.app_context():
+        db.create_all()
+    print("✅ Database tables initialized successfully")
+except Exception as e:
+    # Log the error but don't crash — allows health checks to pass
+    # Database-dependent routes will fail with 500 errors
+    print(f"❌ Database initialization failed: {e}")
+    print("⚠️  App will start but database features will not work.")
+    print("   → Set DATABASE_URL environment variable for PostgreSQL")
+    print("   → Or ensure SQLite path is writable (local dev only)")
 # ---------------------------------------------------------------------------
 # Module initialisation (singletons — loaded once at startup)
 # ---------------------------------------------------------------------------
@@ -66,15 +95,31 @@ readiness_calculator = ReadinessCalculator()
 jd_matcher = JDMatcher(app.config['SKILLS_DATA_PATH'])
 ats_scorer = ATSScorer()
 
-# Optional: Kaggle dataset for demo mode
-try:
-    from modules.dataset_processor import DatasetProcessor
-    dataset_processor = DatasetProcessor()
-    dataset_processor.load_datasets()
-    print("✅ Kaggle datasets loaded successfully!")
-except Exception as e:
-    dataset_processor = None
-    print(f"⚠️  Kaggle datasets not loaded: {e}")
+# Optional: Kaggle dataset for demo mode (lazy-loaded on demand to optimize serverless cold starts)
+_dataset_processor = None
+_dataset_lock = threading.Lock()
+
+def get_dataset_processor():
+    """Thread-safe lazy loader for the Kaggle dataset processor.
+    Defers loading the 17 MB CSV until demo routes are explicitly called.
+    Caches the loaded instance for subsequent requests.
+    """
+    global _dataset_processor
+    if _dataset_processor is not None:
+        return _dataset_processor
+
+    with _dataset_lock:
+        if _dataset_processor is None:
+            try:
+                from modules.dataset_processor import DatasetProcessor
+                processor = DatasetProcessor()
+                processor.load_datasets()
+                _dataset_processor = processor
+                print("✅ Kaggle datasets loaded successfully (lazy loaded)!")
+            except Exception as e:
+                _dataset_processor = None
+                print(f"⚠️  Kaggle datasets not loaded: {e}")
+    return _dataset_processor
 
 # ---------------------------------------------------------------------------
 # Utility helpers
@@ -133,17 +178,18 @@ def history():
 @app.route('/demo')
 def demo():
     """Demo mode with Kaggle dataset."""
-    if dataset_processor is None:
+    dp = get_dataset_processor()
+    if dp is None:
         return render_template('index.html',
                                job_roles=skill_matcher.get_available_roles(),
                                roles_by_category=skill_matcher.get_roles_by_category(),
                                error="Demo dataset not available.")
     job_roles = skill_matcher.get_available_roles()
-    kaggle_positions = dataset_processor.get_all_job_positions()[:10]
+    kaggle_positions = dp.get_all_job_positions()[:10]
     return render_template('demo.html',
                            job_roles=job_roles,
                            kaggle_positions=kaggle_positions,
-                           total_resumes=len(dataset_processor.resume_df))
+                           total_resumes=len(dp.resume_df))
 
 
 # ---------------------------------------------------------------------------
@@ -183,16 +229,35 @@ def analyze():
 
         cleaned_text = ResumeParser.clean_text(raw_text)
 
-        # Persist in Flask session
-        session['resume_text'] = cleaned_text
+        # Get or create DB session
+        user_session = get_or_create_session()
+        user_session.target_role = job_role
+
+        # Minimal session metadata (NO raw resume text)
         session['target_role'] = job_role
         session['filename'] = filename
         if jd_text:
             session['jd_text'] = jd_text
+        session.pop('resume_text', None)
 
-        # Persist role in DB
-        user_session = get_or_create_session()
-        user_session.target_role = job_role
+        # Run pipeline in memory immediately while file content is available
+        enriched_skills = skill_extractor.extract_skills_with_experience(cleaned_text)
+        basic_skills = [s['skill'] for s in enriched_skills]
+        match_results = skill_matcher.match_skills(basic_skills, job_role)
+
+        projects = UserProject.query.filter_by(session_id=user_session.session_id).all()
+        readiness_data = readiness_calculator.calculate_readiness(
+            enriched_skills, match_results, [p.to_dict() for p in projects]
+        )
+
+        required_keywords = match_results.get('matched_required', []) + \
+                            match_results.get('missing_required', [])
+        ats_result = ats_scorer.score(cleaned_text, required_keywords, job_role)
+
+        # Persist snapshot with full breakdown & ATS score into database
+        _save_snapshot(user_session.session_id, job_role, readiness_data,
+                       enriched_skills, match_results, ats_score=ats_result)
+
         db.session.commit()
 
         return redirect(url_for('career_dashboard'))
@@ -246,75 +311,60 @@ def dashboard():
             return jsonify({'error': 'No target role set. Please upload a resume first.',
                             'redirect': '/'}), 400
 
-        resume_text = session.get('resume_text')
+        latest = ReadinessSnapshot.query.filter_by(
+            session_id=user_session.session_id
+        ).order_by(ReadinessSnapshot.created_at.desc()).first()
 
-        # ---- Returning user: load from latest snapshot ----
-        if not resume_text:
-            latest = ReadinessSnapshot.query.filter_by(
-                session_id=user_session.session_id
-            ).order_by(ReadinessSnapshot.created_at.desc()).first()
-
-            if not latest or not latest.snapshot_data:
-                return jsonify({'error': 'No resume data found. Please upload a resume first.',
-                                'redirect': '/'}), 400
-
-            enriched_skills = latest.snapshot_data.get('enriched_skills', [])
-            match_results = latest.snapshot_data.get('match_results', {})
-
-            if not enriched_skills or not match_results:
-                return jsonify({'error': 'Cached data incomplete. Please re-upload your resume.',
-                                'redirect': '/'}), 400
+        # Check if legacy caller or test provided resume_text directly in session
+        resume_text = session.pop('resume_text', None)
+        if resume_text and (not latest or not latest.snapshot_data):
+            enriched_skills = skill_extractor.extract_skills_with_experience(resume_text)
+            basic_skills = [s['skill'] for s in enriched_skills]
+            match_results = skill_matcher.match_skills(basic_skills, target_role)
 
             projects = UserProject.query.filter_by(session_id=user_session.session_id).all()
             readiness_data = readiness_calculator.calculate_readiness(
                 enriched_skills, match_results, [p.to_dict() for p in projects]
             )
-            # Save a new snapshot only when any readiness component has changed
-            # since the last snapshot. Compares all four scored dimensions so
-            # that a project addition (evidence only) or a role change (skill
-            # match only) is recorded even when the rounded overall score is
-            # unchanged. Identical page-refresh reloads produce no duplicate row.
-            if _readiness_changed(readiness_data, latest):
-                _save_snapshot(user_session.session_id, target_role, readiness_data,
-                               enriched_skills, match_results)
+            required_keywords = match_results.get('matched_required', []) + \
+                                match_results.get('missing_required', [])
+            ats_result = ats_scorer.score(resume_text, required_keywords, target_role)
+
+            _save_snapshot(user_session.session_id, target_role, readiness_data,
+                           enriched_skills, match_results, ats_score=ats_result)
 
             return _dashboard_response(readiness_data, target_role,
-                                       user_session.session_id, cached=True)
+                                       user_session.session_id, cached=False, ats_score=ats_result)
 
-        # ---- First-time user: full pipeline ----
-        enriched_skills = skill_extractor.extract_skills_with_experience(resume_text)
-        basic_skills = [s['skill'] for s in enriched_skills]
-        match_results = skill_matcher.match_skills(basic_skills, target_role)
+        if not latest or not latest.snapshot_data:
+            return jsonify({'error': 'No resume data found. Please upload a resume first.',
+                            'redirect': '/'}), 400
+
+        enriched_skills = latest.snapshot_data.get('enriched_skills', [])
+        match_results = latest.snapshot_data.get('match_results', {})
+
+        if not enriched_skills or not match_results:
+            return jsonify({'error': 'Cached data incomplete. Please re-upload your resume.',
+                            'redirect': '/'}), 400
 
         projects = UserProject.query.filter_by(session_id=user_session.session_id).all()
         readiness_data = readiness_calculator.calculate_readiness(
             enriched_skills, match_results, [p.to_dict() for p in projects]
         )
-        _save_snapshot(user_session.session_id, target_role, readiness_data,
-                       enriched_skills, match_results)
 
-        # ATS score on first visit
-        required_keywords = match_results.get('matched_required', []) + \
-                            match_results.get('missing_required', [])
-        ats_result = ats_scorer.score(resume_text, required_keywords, target_role)
+        ats_score = latest.snapshot_data.get('ats_score')
 
-        session.pop('resume_text', None)   # clear after first use
+        # Save a new snapshot only when any readiness component has changed
+        # since the last snapshot. Compares all four scored dimensions so
+        # that a project addition (evidence only) or a role change (skill
+        # match only) is recorded even when the rounded overall score is
+        # unchanged. Identical page-refresh reloads produce no duplicate row.
+        if _readiness_changed(readiness_data, latest):
+            _save_snapshot(user_session.session_id, target_role, readiness_data,
+                           enriched_skills, match_results, ats_score=ats_score)
 
-        return jsonify({
-            'readiness': {
-                'overall_score': readiness_data['overall_score'],
-                'skill_match_score': readiness_data['skill_match_score'],
-                'experience_score': readiness_data['experience_score'],
-                'evidence_score': readiness_data['evidence_score'],
-                'breakdown': readiness_data['breakdown'],
-            },
-            'gap_analysis': readiness_data['gap_analysis'],
-            'recommendations': readiness_data['recommendations'],
-            'target_role': target_role,
-            'session_id': user_session.session_id,
-            'cached': False,
-            'ats_score': ats_result,
-        })
+        return _dashboard_response(readiness_data, target_role,
+                                   user_session.session_id, cached=True, ats_score=ats_score)
 
     except Exception as e:
         return jsonify({'error': f'Dashboard failed: {str(e)}'}), 500
@@ -351,8 +401,18 @@ def _readiness_changed(new_data: dict, latest_snapshot) -> bool:
     return False
 
 
-def _save_snapshot(session_id, target_role, readiness_data, enriched_skills, match_results):
+def _save_snapshot(session_id, target_role, readiness_data, enriched_skills, match_results, ats_score=None):
     """Persist a ReadinessSnapshot to the database."""
+    snap_data = {
+        'breakdown': readiness_data['breakdown'],
+        'gap_analysis': readiness_data['gap_analysis'],
+        'recommendations': readiness_data['recommendations'],
+        'enriched_skills': enriched_skills,
+        'match_results': match_results,
+    }
+    if ats_score is not None:
+        snap_data['ats_score'] = ats_score
+
     snap = ReadinessSnapshot(
         session_id=session_id,
         target_role=target_role,
@@ -360,21 +420,16 @@ def _save_snapshot(session_id, target_role, readiness_data, enriched_skills, mat
         skill_match_score=readiness_data['skill_match_score'],
         experience_score=readiness_data['experience_score'],
         evidence_score=readiness_data['evidence_score'],
-        snapshot_data={
-            'breakdown': readiness_data['breakdown'],
-            'gap_analysis': readiness_data['gap_analysis'],
-            'recommendations': readiness_data['recommendations'],
-            'enriched_skills': enriched_skills,
-            'match_results': match_results,
-        },
+        snapshot_data=snap_data,
     )
     db.session.add(snap)
     db.session.commit()
+    return snap
 
 
-def _dashboard_response(readiness_data, target_role, session_id, cached=False):
+def _dashboard_response(readiness_data, target_role, session_id, cached=False, ats_score=None):
     """Build the standard dashboard JSON response."""
-    return jsonify({
+    resp = {
         'readiness': {
             'overall_score': readiness_data['overall_score'],
             'skill_match_score': readiness_data['skill_match_score'],
@@ -387,7 +442,10 @@ def _dashboard_response(readiness_data, target_role, session_id, cached=False):
         'target_role': target_role,
         'session_id': session_id,
         'cached': cached,
-    })
+    }
+    if ats_score is not None:
+        resp['ats_score'] = ats_score
+    return jsonify(resp)
 
 
 @app.route('/set-target-role', methods=['POST'])
@@ -704,7 +762,8 @@ def api_stats():
 def analyze_kaggle():
     """Demo: analyze a Kaggle dataset resume."""
     try:
-        if dataset_processor is None:
+        dp = get_dataset_processor()
+        if dp is None:
             return jsonify({'error': 'Kaggle datasets not loaded'}), 500
         job_role = request.form.get('job_role')
         position_filter = request.form.get('position_filter')
@@ -712,15 +771,15 @@ def analyze_kaggle():
             return jsonify({'error': 'No job role selected'}), 400
 
         if position_filter and position_filter != 'random':
-            sample = dataset_processor.get_resume_by_position(position_filter, 1)
+            sample = dp.get_resume_by_position(position_filter, 1)
             if len(sample) == 0:
-                sample = dataset_processor.get_random_resume(1)
+                sample = dp.get_random_resume(1)
         else:
-            sample = dataset_processor.get_random_resume(1)
+            sample = dp.get_random_resume(1)
 
         row = sample.iloc[0]
-        extracted_skills = dataset_processor.extract_resume_skills(row)
-        resume_text = dataset_processor.create_resume_text(row)
+        extracted_skills = dp.extract_resume_skills(row)
+        resume_text = dp.create_resume_text(row)
         categorized = skill_extractor.categorize_skills(extracted_skills)
         match_results = skill_matcher.match_skills(extracted_skills, job_role)
         recommendations = skill_recommender.generate_recommendations(match_results)
@@ -740,17 +799,26 @@ def analyze_kaggle():
 
 @app.route('/api/kaggle-stats', methods=['GET'])
 def kaggle_stats():
-    if dataset_processor is None:
+    dp = get_dataset_processor()
+    if dp is None:
         return jsonify({'error': 'Kaggle datasets not loaded'}), 500
-    return jsonify(dataset_processor.get_dataset_statistics())
+    return jsonify(dp.get_dataset_statistics())
 
 
 @app.route('/api/kaggle-positions', methods=['GET'])
 def kaggle_positions():
-    if dataset_processor is None:
+    dp = get_dataset_processor()
+    if dp is None:
         return jsonify({'error': 'Kaggle datasets not loaded'}), 500
-    positions = dataset_processor.get_all_job_positions()
+    positions = dp.get_all_job_positions()
     return jsonify({'positions': positions, 'total': len(positions)})
+
+
+def __getattr__(name):
+    """Module-level attribute fallback for backward compatibility."""
+    if name == 'dataset_processor':
+        return get_dataset_processor()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 # ---------------------------------------------------------------------------

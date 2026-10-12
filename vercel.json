@@ -1,0 +1,11 @@
+{
+  "framework": null,
+  "functions": {
+    "app.py": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "FLASK_ENV": "production"
+  }
+}

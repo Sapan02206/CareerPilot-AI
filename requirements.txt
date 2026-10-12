@@ -8,6 +8,7 @@ gunicorn==21.2.0
 
 # Database
 Flask-SQLAlchemy==3.1.1
+psycopg2-binary==2.9.9  # PostgreSQL adapter (required for Vercel Postgres)
 
 # Resume parsing
 pypdf==3.17.4

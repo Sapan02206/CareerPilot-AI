@@ -14,25 +14,35 @@ class Config:
     #  Flask core                                                          #
     # ------------------------------------------------------------------ #
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-CHANGE-IN-PRODUCTION'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024   # 16 MB upload limit
+    MAX_CONTENT_LENGTH = 3.5 * 1024 * 1024   # 3.5 MB - Vercel free tier compatible with multipart overhead margin
 
     # ------------------------------------------------------------------ #
     #  File uploads                                                        #
     # ------------------------------------------------------------------ #
-    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+    # Detect serverless environments (Vercel, AWS Lambda) and use /tmp
+    _default_upload = '/tmp/uploads' if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') else 'uploads'
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', _default_upload)
     ALLOWED_EXTENSIONS = {'pdf', 'docx'}
 
     # ------------------------------------------------------------------ #
     #  Database                                                            #
     # ------------------------------------------------------------------ #
-    # Priority: DATABASE_URL env var (PostgreSQL) → SQLite fallback
+    # Priority: DATABASE_URL env var (PostgreSQL/MySQL) → SQLite fallback
+    # SQLite uses instance/ subdirectory for data persistence
     _db_url = os.environ.get('DATABASE_URL', '')
 
     # Fix for older Heroku/Railway postgres:// URL scheme
     if _db_url.startswith('postgres://'):
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 
-    SQLALCHEMY_DATABASE_URI = _db_url or 'sqlite:///resume_analyzer.db'
+    # SQLite path: use absolute path to instance/resume_analyzer.db
+    # This ensures consistent behavior across platforms (local dev, PythonAnywhere, etc.)
+    if not _db_url:
+        _basedir = os.path.abspath(os.path.dirname(__file__))
+        _db_file = os.path.join(_basedir, 'instance', 'resume_analyzer.db')
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_file}'
+    else:
+        SQLALCHEMY_DATABASE_URI = _db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,       # reconnect on stale connections

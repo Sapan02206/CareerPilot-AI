@@ -61,3 +61,47 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Vercel deployment files
+.vercel
+
+# Presentation and pitch materials (non-runtime assets)
+pitch/
+ppt/
+
+# Diagnostic certificates and backups
+/prod-ca-2021.crt
+/app.py.before_vercel_fix.backup
+
+# Root-level diagnostic scripts and runners
+/run_*.py
+/run_tests.ps1
+/verify_*.py
+/check_*.py
+/diagnose_*.py
+/investigate_*.py
+/test_*.py
+/quick_test.py
+/analyze_file_dependencies.py
+/initialize_supabase_schema.py
+
+# Root-level diagnostic logs, test outputs, and diffs
+/app_diff.txt
+/app_test_results.txt
+/config_diff.txt
+/connection_test_result.txt
+/db_investigation_results.txt
+/db_path_verification.txt
+/postgresql_compatibility_results.txt
+/supabase_tables.txt
+/test_final.txt
+/test_final_pythonanywhere.txt
+/test_results.txt
+/test_results_safety_check.txt
+/test_results_venv.txt
+/test_results_vercel_plan.txt
+/test_vercel_verification.txt
+/test_vercel_verification_exitcode.txt
+/test_verification.txt
+/verification_fix_results.txt
+/wsgi_diff.txt

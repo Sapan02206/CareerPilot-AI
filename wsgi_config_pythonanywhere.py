@@ -30,6 +30,9 @@ os.chdir(PROJECT_ROOT)
 # os.environ.setdefault('SECRET_KEY', 'change-me-in-production')
 # os.environ.setdefault('DATABASE_URL', '')   # leave blank for SQLite default
 
+# ── Upload folder (absolute path for production)
+os.environ.setdefault('UPLOAD_FOLDER', '/home/sapandesai/Resume_Analyzer/uploads')
+
 # ── Import Flask application ─────────────────────────────────────────────
 from app import app as application  # noqa: F401
 
