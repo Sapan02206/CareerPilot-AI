@@ -52,7 +52,7 @@ class SkillMatcher:
         "azure": ["microsoft azure", "ms azure", "azure cloud"],
         "google cloud": ["gcp", "google cloud platform", "google cloud services"],
         "linux": ["unix", "ubuntu", "centos", "debian", "rhel", "redhat", "fedora"],
-        "rest api": ["restful", "restful api", "rest", "api development", "web api", "http api"],
+        "rest api": ["restful", "restful api", "rest", "api development", "web api", "http api", "rest apis", "restful apis", "web apis"],
         "graphql": ["gql", "graph ql"],
         "typescript": ["ts", "typed javascript"],
         "javascript": ["js", "ecmascript", "es6", "vanilla js", "es2015"],

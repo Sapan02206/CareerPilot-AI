@@ -272,7 +272,7 @@ class JDMatcher:
 
         found_technical = False
         for skill in technical_skills:
-            pattern = r"\b" + re.escape(skill.lower()) + r"\b"
+            pattern = self._skill_pattern(skill)
             if re.search(pattern, text_lower):
                 found_technical = True
                 break
@@ -458,7 +458,7 @@ class JDMatcher:
             if skill_lower in all_found_in_pass1:
                 continue
 
-            pattern = r"\b" + re.escape(skill_lower) + r"\b"
+            pattern = self._skill_pattern(skill_lower)
             for m in re.finditer(pattern, text_lower):
                 abs_pos = m.start()
                 if abs_pos in classified_positions:
@@ -517,12 +517,20 @@ class JDMatcher:
 
         return found_required, found_preferred
 
+    @staticmethod
+    def _skill_pattern(skill: str) -> str:
+        """Return word-boundary regex pattern for skill, handling variants like REST API."""
+        s_lower = skill.lower()
+        if s_lower in ("rest api", "rest apis", "restful api", "restful apis"):
+            return r"\b(?:rest\s+apis?|restful\s+apis?|web\s+apis?)\b"
+        return r"\b" + re.escape(s_lower) + r"\b"
+
     def _find_skills_in_text(self, text: str) -> List[Tuple[str, int]]:
         """Find all known skills in a text segment. Returns (skill, position) tuples."""
         text_lower = text.lower()
         results = []
         for skill in self.all_skills:
-            pattern = r"\b" + re.escape(skill.lower()) + r"\b"
+            pattern = self._skill_pattern(skill)
             m = re.search(pattern, text_lower)
             if m:
                 results.append((skill, m.start()))
@@ -574,7 +582,7 @@ class JDMatcher:
             # Skip if it contains a recognised skill
             contains_skill = False
             for skill in recognised_lower:
-                pattern = r"\b" + re.escape(skill) + r"\b"
+                pattern = self._skill_pattern(skill)
                 if re.search(pattern, phrase_lower):
                     contains_skill = True
                     break
@@ -675,7 +683,7 @@ class JDMatcher:
         gaps = []
         text_lower = jd_text.lower()
         for skill in missing_required:
-            count = len(re.findall(r"\b" + re.escape(skill.lower()) + r"\b", text_lower))
+            count = len(re.findall(self._skill_pattern(skill), text_lower))
             gaps.append({
                 "skill": skill,
                 "priority": "HIGH",
@@ -683,7 +691,7 @@ class JDMatcher:
                 "impact": "Required — will likely be filtered by ATS",
             })
         for skill in missing_preferred:
-            count = len(re.findall(r"\b" + re.escape(skill.lower()) + r"\b", text_lower))
+            count = len(re.findall(self._skill_pattern(skill), text_lower))
             gaps.append({
                 "skill": skill,
                 "priority": "MEDIUM",

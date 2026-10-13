@@ -199,8 +199,11 @@ class ATSScorer:
 
         for kw in keywords:
             kw_lower = kw.lower()
-            # Word-boundary match for multi-word skills too
-            pattern = r"\b" + re.escape(kw_lower) + r"\b"
+            # Word-boundary match for multi-word skills too; handle REST API variants
+            if kw_lower in ("rest api", "rest apis", "restful api", "restful apis"):
+                pattern = r"\b(?:rest\s+apis?|restful\s+apis?|web\s+apis?)\b"
+            else:
+                pattern = r"\b" + re.escape(kw_lower) + r"\b"
             count = len(re.findall(pattern, text_lower))
             if count > 0:
                 matched.append(kw)

@@ -22,7 +22,8 @@
       "NestJS", "Hapi.js", "Koa.js", "Tornado", "Sanic", "aiohttp",
       "REST API", "GraphQL", "gRPC", "WebSockets", "Microservices",
       "Serverless", "Message Queues", "RabbitMQ", "Apache Kafka",
-      "Celery", "Authentication", "OAuth", "JWT", "API Gateway"
+      "Celery", "Authentication", "OAuth", "JWT", "API Gateway",
+      "Nodemailer"
     ],
     "databases": [
       "MySQL", "PostgreSQL", "SQLite", "Oracle", "SQL Server", "MariaDB",
@@ -194,7 +195,8 @@
     "HTML": ["HTML5"],
     "CSS": ["CSS3", "Cascading Style Sheets"],
     "SQL": ["Structured Query Language"],
-    "REST API": ["RESTful API", "REST", "RESTful", "API Development"],
+    "REST API": ["RESTful API", "REST", "RESTful", "API Development", "REST APIs", "RESTful APIs", "Web APIs"],
+    "Nodemailer": ["nodemailer"],
     "GraphQL": ["GQL"],
     "CI/CD": ["Continuous Integration", "Continuous Deployment", "Continuous Delivery", "CI CD", "CICD"],
     "Linux": ["Unix", "Ubuntu", "CentOS", "Debian", "RedHat", "RHEL", "Fedora"],
